@@ -52,3 +52,23 @@ Every event carries: app version, touch device or not, installed to home screen 
 | `help_opened`, `plus_viewed`, `colour_letters` | Those screens or switches | |
 
 No identifier is stored on the device. Each visit has a random id held in memory, so "unique users" in PostHog means visits. Use `games_played` and `days_since_first_play` to see returning players.
+
+## Apps
+
+The Android and iPhone apps wrap the same web files with Capacitor 7. App ID: `uk.co.zinkin.fits`.
+
+| Path | What it holds |
+|---|---|
+| `android/` | Android project |
+| `ios/` | iPhone project (needs a Mac to build) |
+| `capacitor.config.json`, `package.json` | App settings and build commands |
+| `build-www.js` | Copies the game into `www/` for the apps, without the website's ad tag or service worker |
+| `make-app-icons.js` | Redraws the Android icons and splash screens |
+
+```
+npm install
+npm run android:sync    # copy the game into the Android project
+npm run ios:sync        # copy the game into the iPhone project (Mac)
+```
+
+Signing keys are never committed. `notes/` is private and not in the repo.

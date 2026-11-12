@@ -1,7 +1,7 @@
 /* Draws the Android launcher icons and splash screens from the same design as the web icons.
    Usage: node make-app-icons.js   (after `npx cap add android`) */
 const fs = require('fs'), path = require('path');
-const { render, png } = require('../icons/make-icons.js');
+const { render, png } = require('./icons/make-icons.js');
 const res = path.join(__dirname, 'android', 'app', 'src', 'main', 'res');
 const put = (file, W, H, scale) => { fs.writeFileSync(file, png(W, H, render(W, H, scale))); console.log('wrote', path.relative(res, file), W + 'x' + H); };
 

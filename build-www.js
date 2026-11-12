@@ -1,7 +1,7 @@
-/* Copies the game's web files from the repo root into app/www, which is what the Android and iPhone apps ship.
+/* Copies the game's web files from the repo root into www, which is what the Android and iPhone apps ship.
    The service worker is left out: the app's files are already on the device. Usage: node build-www.js */
 const fs = require('fs'), path = require('path');
-const root = path.join(__dirname, '..'), out = path.join(__dirname, 'www');
+const root = __dirname, out = path.join(__dirname, 'www');
 const FILES = ['index.html', 'style.css', 'app.js', 'rules.js', 'config.js', 'words.txt', 'privacy.html', 'manifest.webmanifest', 'icon.svg'];
 const ICONS = ['icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'favicon-32.png'];
 
