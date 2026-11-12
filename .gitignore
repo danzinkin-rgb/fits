@@ -23,3 +23,5 @@ ios/App/App.xcodeproj/xcuserdata/
 # private working notes and shelved prototypes
 notes/
 .claude/
+# Android Studio settings
+android/.idea/
