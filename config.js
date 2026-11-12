@@ -3,7 +3,7 @@
 window.FITS_CONFIG = {
   /* PostHog project API key (starts with 'phc_'). Switches on anonymous play data and the star-rating prompt.
      Create a free project at posthog.com, choose the EU region, and copy the key from Project settings. */
-  posthogKey: '',
+  posthogKey: 'phc_BTmvt862sGvHw54HKB92vPzgrnTCmXd9YB92pph7jAzS',
 
   /* Change to 'https://us.i.posthog.com' only if the PostHog project is in the US region. */
   posthogHost: 'https://eu.i.posthog.com',

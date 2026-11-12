@@ -85,17 +85,23 @@
     const nCards = rule.d === 1 ? 6 : 8;
     const others = RULES.filter(o => o.type === rule.type && o.id !== rule.id);
     let best = null;
-    for (let i = 0; i < (expert ? 1 : 200); i++) {
-      const used = new Set(), yes = pick(r, sp.yes, 2, used), no = pick(r, sp.no, 1, used);
-      const ok = others.filter(o => yes.every(v => o.test(v)) && !o.test(no[0]));
-      if (!best || ok.length > best.ok.length) best = { yes, no, ok };
-      if (ok.length >= nCards - 1) break;
+    for (let i = 0; i < (expert ? 1 : 400); i++) {
+      const yes = pick(r, sp.yes, 2, new Set());
+      const live = others.filter(o => yes.every(v => o.test(v)));
+      if (best && live.length <= best.ok.length) continue;
+      /* for this pair, look for the non-fitting example that leaves the most rules standing */
+      for (const no of expert ? pick(r, sp.no, 1, new Set()) : shuffled(sp.no, r)) {
+        const ok = live.filter(o => !o.test(no));
+        if (!best || ok.length > best.ok.length) best = { yes, no: [no], ok };
+        if (ok.length >= nCards - 1) break;
+      }
+      if (best && best.ok.length >= nCards - 1) break;
     }
     const items = [...best.yes.map(v => ({ v, fit: true, src: 'seed' })), ...best.no.map(v => ({ v, fit: false, src: 'seed' }))];
     const tray = rule.type === 'shape' ? { tray: [], trayN: 0 } : {};
     if (expert) return fillTray(rule, { seed, expert: true, items, ...tray, log: '', strikes: 0, hints: 0, clue: false, done: null, stars: 0 });
     const decoys = shuffled(best.ok, r).slice(0, nCards - 1);
-    if (decoys.length < nCards - 1) decoys.push(...shuffled(others.filter(o => !decoys.includes(o)), r).slice(0, nCards - 1 - decoys.length));
+    /* never pad with a rule the examples already rule out: a slightly shorter shortlist is better */
     return fillTray(rule, { seed, expert: false, items, ...tray, cards: shuffled([rule, ...decoys], r).map(c => c.id), out: {}, log: '', done: null, score: 0 });
   }
 
