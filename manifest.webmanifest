@@ -1,0 +1,15 @@
+{
+  "name": "Fits — crack the secret rule",
+  "short_name": "Fits",
+  "description": "One secret rule a day. Test, deduce, prove.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6f1e7",
+  "theme_color": "#f6f1e7",
+  "categories": ["games", "puzzle", "education"],
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
