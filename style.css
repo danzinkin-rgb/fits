@@ -304,3 +304,13 @@ body.touch #probe-form .btn { padding: 9px 20px; }
 .rate-stars button.on { color: var(--gold); }
 #rate-text { width: 100%; font: inherit; font-size: 16px; padding: 10px 12px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg); color: var(--ink); resize: none; }
 #rate-more .btn { width: 100%; margin-top: 8px; }
+
+/* ---- branding ---- */
+.dot { color: var(--go); }
+.logo { display: inline-flex; align-items: center; }
+.logo-mark { border-radius: 8px; display: block; margin-right: 8px; }
+.dlg-logo { font-size: 26px; justify-content: center; display: flex; margin: 0 0 6px; }
+body { border-top: 5px solid var(--go); }
+.result-card { border-top: 6px solid var(--go); }
+.why-line { font-size: 15px; color: var(--muted); margin: 6px 0 16px; }
+.menu-item .dot, .btn .dot { font-weight: 900; }

@@ -22,7 +22,7 @@ Everything is set in `config.js`. With the file as shipped there are no ads and 
 
 1. **Play data and ratings.** Create a free PostHog project (EU region) and paste its project key into `posthogKey`. The game then sends anonymous events, and asks players for a star rating after a finished daily puzzle (at most once a week, never again once rated).
 2. **Banner ads.** Once AdSense approves the site, set `adsenseClient` to the publisher ID and `adsenseBannerSlot` to a display ad unit ID.
-3. **Rewarded ads.** Once Google accepts the account into H5 Games Ads, set `rewardedAds` to `true`. Tidy up, practice, expert rounds and past puzzles then ask the player to watch an ad first. The daily puzzle never needs one.
+3. **Rewarded ads.** Once Google accepts the account into H5 Games Ads, set `rewardedAds` to `true`. Practice rounds, expert rounds and past puzzles then ask the player to watch an ad first. The daily puzzle never needs one.
 
 Before ads go live, also:
 
@@ -44,7 +44,6 @@ Every event carries: app version, touch device or not, installed to home screen 
 | `app_open` | The page loads | first visit or not |
 | `puzzle_start` | A puzzle is opened for the first time | |
 | `test` | A number, word or picture is tested | move number, fits or not |
-| `tidy_up` | Tidy up is used | move number, rules crossed out |
 | `wrong_guess` | The wrong rule is named | move number, rule guessed |
 | `puzzle_end` | A puzzle is won or lost | result, score, tests, wrong guesses, tidied, seconds taken |
 | `proof_failed` | Expert round: a proof is wrong | how many of six were wrong |

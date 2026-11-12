@@ -137,6 +137,30 @@
   /* ---------- game state ---------- */
   let G = null;                                  // { mode, day, rule, s, proof, picking }
 
+  /* The browser's Back button stays inside the game: it closes whatever dialog is open, and from a practice
+     round, expert round or past puzzle it returns to today's puzzle. Only from today's puzzle does it leave. */
+  const Nav = {
+    popping: false,
+    push(state) { try { history.pushState(state, ''); } catch (e) { /* not allowed here */ } },
+    dialog(d) {
+      d.showModal = function () { HTMLDialogElement.prototype.showModal.call(this); Nav.push({ dlg: this.id }); };
+      d.addEventListener('close', () => { if (history.state && history.state.dlg === d.id) history.back(); });
+    },
+    mode(mode) {
+      if (mode === 'daily' || Nav.popping) return;
+      if (history.state && history.state.mode) { try { history.replaceState({ mode }, ''); } catch (e) { /* ignore */ } }
+      else Nav.push({ mode });
+    },
+    onpop(e) {
+      const open = document.querySelectorAll('dialog[open]');
+      if (open.length) { open.forEach(d => d.close()); return; }
+      const st = e.state || {};
+      if (st.dlg) { history.back(); return; }                       // a leftover entry for a dialog that is already closed
+      if (!st.mode && G && G.mode !== 'daily') { Nav.popping = true; start('daily', today()); Nav.popping = false; }
+    },
+  };
+  window.addEventListener('popstate', e => Nav.onpop(e));
+
   function start(mode, day) {
     let rule, s;
     if (mode === 'practice' || mode === 'expert') {
@@ -147,6 +171,7 @@
       s = db.days[day] || (db.days[day] = fresh(rule, 'd' + day, false));
     }
     G = { mode, day, rule, s, proof: null, picking: false, sel: null };
+    Nav.mode(mode);
     if (!s.t0) { s.t0 = Date.now(); Track.send('puzzle_start', gp()); }
     if (rule.type === 'word') loadDict();
     if (s.tray) fillTray(rule, s);
@@ -448,10 +473,10 @@
     const hint = $('#btn-hint'), go = $('#btn-prove');
     if (s.expert) {
       const hl = EX.HINTS - s.hints;
-      hint.textContent = hl ? 'Hint (' + hl + ' left)' : 'No hints left'; hint.disabled = !hl;
+      hint.textContent = hl ? 'Hint (' + hl + ' left)' : 'No hints left'; hint.disabled = !hl; hint.hidden = false;
       go.textContent = 'I know the rule';
     } else {
-      hint.textContent = G.picking ? 'Cancel' : 'Tidy up'; hint.disabled = false;
+      hint.textContent = 'Cancel'; hint.disabled = false; hint.hidden = !G.picking;
       go.textContent = 'Name the rule';
     }
     go.hidden = G.picking;
@@ -531,12 +556,6 @@
       s.expert ? ['', 'Solved', 'Nicely done', 'Flawless'][s.stars] : ['', 'Mind reader', 'Brilliant', 'Sharp', 'Solid', 'Got there', 'Phew'][s.score];
     $('#done-rule').textContent = rule.text;
     $('#done-why').textContent = rule.why;
-    const tests = (s.log.match(/[fn]/g) || []).length, neg = (s.log.match(/n/g) || []).length;
-    $('#done-coach').textContent =
-      s.expert ? (tests >= 2 && neg === 0 ? 'Every test you ran came back ✓. Tests you expect to fail usually rule out more.' : '') :
-      won && tests === 0 ? 'You named it without a single test. Lucky or bold.' :
-      won && s.score <= 4 ? 'Efficient. The strongest test is one that about half the remaining rules would pass, so either answer removes half the list.' :
-      'Tip: before testing, ask which rules a ✓ would remove and which a ✗ would remove. The best test removes about half either way.';
     $('#btn-share').hidden = !saved();
     $('#btn-feedback').hidden = !Track.on;
     Ads.banner();
@@ -638,7 +657,7 @@
     if (!inp.disabled && !TOUCH) inp.focus();
   });
   $('#btn-prove').onclick = () => { if (G.s.expert) G.proof = makeProof(G.rule, G.s); else G.picking = true; render(); };
-  $('#btn-hint').onclick = () => { if (G.s.expert) expertHint(); else if (G.picking) { G.picking = false; render(); } else tidy(); };
+  $('#btn-hint').onclick = () => { if (G.s.expert) expertHint(); else if (G.picking) { G.picking = false; render(); } };
   $('#btn-back').onclick = () => { G.proof = null; render(); };
   $('#btn-submit').onclick = submitProof;
   $('#btn-share').onclick = share;
@@ -655,8 +674,6 @@
     $('#dlg-rate').close(); toast('Thank you for the rating');
   };
   $('#rate-later').onclick = () => { db.rateAsked = today(); persist(); $('#dlg-rate').close(); Track.send('rating_dismissed'); };
-  $('#btn-practice').onclick = () => extra('practice');
-  $('#btn-archive').onclick = () => { renderArchive(); $('#dlg-archive').showModal(); };
   $('#menu-daily').onclick = () => { $('#dlg-menu').close(); start('daily', today()); };
   $('#menu-practice').onclick = () => { $('#dlg-menu').close(); extra('practice'); };
   $('#menu-expert').onclick = () => { $('#dlg-menu').close(); extra('expert'); };
@@ -664,6 +681,7 @@
   $('#menu-plus').onclick = () => { $('#dlg-menu').close(); openPlus(); };
   $('#menu-labels').onclick = () => { db.labels = !db.labels; persist(); renderMenu(); render(); Track.send('colour_letters', { on: db.labels }); };
   document.querySelectorAll('dialog').forEach(d => {
+    Nav.dialog(d);
     d.querySelectorAll('[data-close]').forEach(b => b.onclick = () => d.close());
     if (d.id !== 'dlg-ad') d.addEventListener('click', e => { if (e.target === d) d.close(); });   // the ad prompt needs an explicit answer
   });

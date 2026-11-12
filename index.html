@@ -18,14 +18,14 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Fits">
-<link rel="stylesheet" href="style.css?v=14">
+<link rel="stylesheet" href="style.css?v=15">
 </head>
 <body>
 <div class="app">
   <header class="top">
     <button class="icon-btn" id="btn-help" aria-label="How to play">?</button>
     <div class="brand">
-      <span class="logo">Fits<span class="dot">.</span></span>
+      <span class="logo"><img class="logo-mark" src="icons/icon-192.png" alt="" width="30" height="30">Fits<span class="dot">.</span></span>
       <span class="sub" id="mode-label"></span>
     </div>
     <div class="top-right">
@@ -72,7 +72,7 @@
       <div class="tray" id="tray" hidden></div>
 
       <div class="actions">
-        <button class="btn btn-ghost" id="btn-hint">Tidy up</button>
+        <button class="btn btn-ghost" id="btn-hint" hidden>Cancel</button>
         <button class="btn btn-go" id="btn-prove">Name the rule</button>
       </div>
       </div>
@@ -95,20 +95,12 @@
         <h2 id="done-title"></h2>
         <p class="rule-label">The rule</p>
         <p class="rule-text" id="done-rule"></p>
-        <div class="why">
-          <p class="why-label">Worth knowing</p>
-          <p id="done-why"></p>
-        </div>
-        <p class="coach" id="done-coach"></p>
+        <p class="why-line" id="done-why"></p>
         <div class="actions">
           <button class="btn btn-go" id="btn-share">Share result</button>
-          <button class="btn btn-ghost" id="btn-feedback" hidden>Rate Fits</button>
+          <button class="btn btn-ghost" id="btn-feedback" hidden>Rate Fits<span class="dot">.</span></button>
         </div>
         <p class="next" id="done-next"></p>
-        <div class="more">
-          <button class="btn btn-ghost" id="btn-practice">Practice round</button>
-          <button class="btn btn-ghost" id="btn-archive">Past puzzles</button>
-        </div>
       </div>
       <div class="ad-banner" id="ad-banner" hidden></div>
     </section>
@@ -117,6 +109,7 @@
 
 <!-- dialogs -->
 <dialog id="dlg-help">
+  <div class="logo dlg-logo">Fits<span class="dot">.</span></div>
   <h2>How to play</h2>
   <ol class="how">
     <li><b>One rule is the secret one.</b> You see a shortlist of possible rules. Some numbers, words or pictures fit the secret rule. Others don't.</li>
@@ -127,8 +120,8 @@
     <span class="chip yes">12</span><span class="chip yes">40</span><span class="chip no">7</span>
     <span class="eg-text">Even numbers, or multiples of 4? Test <b>6</b>: it splits them.</span>
   </div>
-  <p class="small">The fewer moves, the better your score. A new rule arrives every midnight, and they get harder through the week. Stuck? <b>Tidy up</b> crosses off every rule the board already contradicts.</p>
-  <button class="btn btn-go" data-close>Play</button>
+  <p class="small">The fewer moves, the better your score. A new rule arrives every midnight, and they get harder through the week.</p>
+  <button class="btn btn-go" data-close>Close</button>
 </dialog>
 
 <dialog id="dlg-stats">
@@ -150,8 +143,8 @@
   <button class="menu-item" id="menu-expert"><b>Expert round</b><span id="menu-expert-sub"></span></button>
   <button class="menu-item" id="menu-archive"><b>Past puzzles</b><span id="menu-archive-sub"></span></button>
   <button class="menu-item" id="menu-labels"><b id="menu-labels-title">Colour letters: off</b><span>Adds R, B, G or Y to every picture, for anyone who finds the colours hard to tell apart</span></button>
-  <button class="menu-item" id="menu-feedback" hidden><b>Rate Fits</b><span>Tell us what works and what does not</span></button>
-  <button class="menu-item plus-item" id="menu-plus"><b>Fits Plus: coming soon</b><span>Levels, no ads, extra stats</span></button>
+  <button class="menu-item" id="menu-feedback" hidden><b>Rate Fits<span class="dot">.</span></b><span>Tell us what works and what does not</span></button>
+  <button class="menu-item plus-item" id="menu-plus"><b>Fits<span class="dot">.</span> Plus: coming soon</b><span>Levels, no ads, extra stats</span></button>
   <p class="small center"><a href="privacy.html">Privacy</a></p>
   <button class="btn btn-ghost" data-close>Close</button>
 </dialog>
@@ -163,7 +156,7 @@
 </dialog>
 
 <dialog id="dlg-plus">
-  <h2>Fits Plus is coming</h2>
+  <h2>Fits<span class="dot">.</span> Plus is coming</h2>
   <p>Everything is free while we test the game. Later, Plus will add:</p>
   <ul class="perks">
     <li>Levels to climb in numbers, words and pictures</li>
@@ -176,14 +169,15 @@
 
 <dialog id="dlg-ad">
   <h2 id="ad-what"></h2>
-  <p class="small">Ads keep Fits free. The daily puzzle never needs one.</p>
+  <p class="small">Ads keep the game free. The daily puzzle never needs one.</p>
   <button class="btn btn-go" id="ad-yes">Watch ad</button>
   <button class="btn btn-ghost" id="ad-no">No thanks</button>
 </dialog>
 
 <dialog id="dlg-rate">
-  <h2>Enjoying Fits?</h2>
-  <p class="small">Tap a star to rate it.</p>
+  <div class="logo dlg-logo">Fits<span class="dot">.</span></div>
+  <h2>Enjoying it so far?</h2>
+  <p class="small">Tap a star to rate the game.</p>
   <div class="rate-stars" id="rate-stars" role="group" aria-label="Rating">
     <button aria-label="1 star">★</button><button aria-label="2 stars">★</button><button aria-label="3 stars">★</button><button aria-label="4 stars">★</button><button aria-label="5 stars">★</button>
   </div>
@@ -197,8 +191,8 @@
 <div class="toast" id="toast" role="status"></div>
 <div class="confetti" id="confetti" aria-hidden="true"></div>
 
-<script src="config.js?v=14"></script>
-<script src="rules.js?v=14"></script>
-<script src="app.js?v=14"></script>
+<script src="config.js?v=15"></script>
+<script src="rules.js?v=15"></script>
+<script src="app.js?v=15"></script>
 </body>
 </html>
