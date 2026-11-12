@@ -178,6 +178,7 @@
     $('#probe-input').value = '';
     save();
     render();
+    if (saved() && !s.done) Ads.loadInterstitial();
   }
   const saved = () => G.mode === 'daily' || G.mode === 'archive';
   const save = () => { if (saved()) persist(); };
@@ -305,9 +306,9 @@
       else st.streak = 0;
     }
     save();
-    render();
-    if (result === 'won') confetti();
-    maybeAskRating();
+    const reveal = () => { render(); if (result === 'won') confetti(); maybeAskRating(); };
+    if (saved()) { Track.send('ad_break', gp()); Ads.interstitial().then(shown => { if (shown) Track.send('ad_shown', Object.assign(gp(), { format: 'interstitial' })); reveal(); }); }
+    else reveal();
   }
 
   /* ---------- ads, feedback and Plus ----------
@@ -350,7 +351,7 @@
       return consent.canRequestAds !== false;
     } catch (e) { return false; }
   })();
-  let amBanner = false;
+  let amBanner = false, amInter = null;
 
   const Ads = {
     /* In the apps: the same opt-in question, then an AdMob rewarded ad. The reward is given if the ad was watched
@@ -380,6 +381,29 @@
           } catch (e) { done(true); }
         };
         d.showModal();
+      });
+    },
+    /* A full-screen ad between the last move and the result. It is loaded when the puzzle opens. If none is ready
+       the result shows straight away: the player is never left waiting for an ad. */
+    async loadInterstitial() {
+      if (!amIds || !amIds.interstitial || amInter) return;
+      amInter = 'loading';
+      try {
+        if (!(await amReady)) { amInter = null; return; }
+        await am('prepareInterstitial', { adId: amIds.interstitial, isTesting: amTest });
+        amInter = 'ready';
+      } catch (e) { amInter = null; }
+    },
+    interstitial() {
+      if (amInter !== 'ready') return Promise.resolve(false);
+      amInter = null;
+      return new Promise(resolve => {
+        let settled = false; const subs = [];
+        const done = ok => { if (settled) return; settled = true; subs.forEach(s => { try { s.remove(); } catch (e) { /* gone */ } }); resolve(ok); };
+        subs.push(CAP.addListener('AdMob', 'interstitialAdDismissed', () => done(true)));
+        subs.push(CAP.addListener('AdMob', 'interstitialAdFailedToShow', () => done(false)));
+        setTimeout(() => done(false), 60000);                                // never hold the result hostage
+        am('showInterstitial').catch(() => done(false));
       });
     },
     /* A banner at the foot of the result screen only, so it never covers the game. */

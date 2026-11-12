@@ -14,6 +14,14 @@ for (const f of ICONS) fs.copyFileSync(path.join(root, 'icons', f), path.join(ou
 const page = path.join(out, 'index.html');
 fs.writeFileSync(page, fs.readFileSync(page, 'utf8').replace(/<script[^>]*adsbygoogle\.js[^>]*><\/script>\s*/g, ''));
 
+/* Store builds show live ads: `node build-www.js --release` switches the sample-ad flag off in the app's copy only. */
+if (process.argv.includes('--release')) {
+  const cfg = path.join(out, 'config.js'), txt = fs.readFileSync(cfg, 'utf8');
+  if (!/admobTest: true/.test(txt)) { console.error('admobTest flag not found in config.js'); process.exit(1); }
+  fs.writeFileSync(cfg, txt.replace('admobTest: true', 'admobTest: false'));
+  console.log('release build: live ads');
+}
+
 /* every file the page links to must have been copied */
 const html = fs.readFileSync(page, 'utf8');
 if (html.includes('adsbygoogle.js')) { console.error('ad tag still in the app page'); process.exit(1); }

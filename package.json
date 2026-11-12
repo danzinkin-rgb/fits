@@ -8,7 +8,9 @@
     "android:sync": "node build-www.js && cap sync android",
     "android:open": "cap open android",
     "ios:sync": "node build-www.js && cap sync ios",
-    "ios:open": "cap open ios"
+    "ios:open": "cap open ios",
+    "android:release": "node build-www.js --release && cap sync android",
+    "ios:release": "node build-www.js --release && cap sync ios"
   },
   "dependencies": {
     "@capacitor-community/admob": "^7.2.0",

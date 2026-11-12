@@ -23,7 +23,7 @@ window.FITS_CONFIG = {
      tapping your own live ads can get the AdMob account suspended. */
   admobTest: true,
   admob: {
-    android: { banner: 'ca-app-pub-5785870881254475/5907022004', rewarded: 'ca-app-pub-5785870881254475/4913504530' },
-    ios: { banner: 'ca-app-pub-5785870881254475/1480866841', rewarded: 'ca-app-pub-5785870881254475/9782687832' },
+    android: { banner: 'ca-app-pub-5785870881254475/5907022004', rewarded: 'ca-app-pub-5785870881254475/4913504530', interstitial: '' },
+    ios: { banner: 'ca-app-pub-5785870881254475/1480866841', rewarded: 'ca-app-pub-5785870881254475/9782687832', interstitial: '' },
   },
 };
