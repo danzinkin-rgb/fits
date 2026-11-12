@@ -1,0 +1,30 @@
+{
+  "appId": "uk.co.zinkin.fits",
+  "appName": "Fits",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#f6f1e7",
+    "preferredContentMode": "mobile"
+  },
+  "android": {
+    "backgroundColor": "#f6f1e7",
+    "adjustMarginsForEdgeToEdge": "auto"
+  },
+  "server": {
+    "iosScheme": "capacitor"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 600,
+      "backgroundColor": "#f6f1e7",
+      "showSpinner": false,
+      "launchAutoHide": true
+    },
+    "StatusBar": {
+      "style": "LIGHT",
+      "backgroundColor": "#5b3df5",
+      "overlaysWebView": false
+    }
+  }
+}

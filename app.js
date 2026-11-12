@@ -316,10 +316,10 @@
      Rewarded: Google's Ad Placement API (H5 Games Ads). The player is asked first, every time, as Google's policy requires.
      If no ad is available, or the ad script is blocked, the player gets the reward anyway. */
   const CFG = Object.assign({ adsenseClient: '', adsenseBannerSlot: '', rewardedAds: false, posthogKey: '', posthogHost: 'https://eu.i.posthog.com' }, window.FITS_CONFIG || {});
-  const adsOn = /^ca-pub-\d+$/.test(CFG.adsenseClient);
+  const adsOn = /^ca-pub-\d+$/.test(CFG.adsenseClient) && !window.Capacitor;   // AdSense is for the website only; the apps use AdMob
   const rewardedOn = adsOn && CFG.rewardedAds === true;
-  if (adsOn) {
-    window.adsbygoogle = window.adsbygoogle || [];
+  if (adsOn) window.adsbygoogle = window.adsbygoogle || [];
+  if (adsOn && !document.querySelector('script[src*="adsbygoogle.js"]')) {      // the page's own tag normally loads it
     const sc = document.createElement('script');
     sc.async = true; sc.crossOrigin = 'anonymous';
     sc.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + encodeURIComponent(CFG.adsenseClient);
@@ -379,7 +379,7 @@
       const body = JSON.stringify({
         api_key: CFG.posthogKey, event, distinct_id: this.visit, timestamp: new Date().toISOString(),
         properties: Object.assign({
-          $process_person_profile: false, $lib: 'fits', app_version: VERSION, touch: TOUCH,
+          $process_person_profile: false, $lib: 'fits', app_version: VERSION, touch: TOUCH, platform: window.Capacitor ? window.Capacitor.getPlatform() : 'web',
           installed: matchMedia('(display-mode: standalone)').matches,
           games_played: db.stats.played, streak: db.stats.streak, days_since_first_play: today() - (db.firstDay || today()),
         }, props),
@@ -576,7 +576,7 @@
     const { s, day } = G, won = s.done === 'won';
     const row = [...s.log].map(c => ({ f: '🟩', n: '🟥', x: '❌', t: '' })[c]).join('') + (won ? '🔓' : '🔒');
     const lines = ['Fits No. ' + day + ' ' + (won ? s.score : 'X') + '/' + MAX_MOVES, row];
-    if (/^https?:/.test(location.protocol)) lines.push(location.origin + location.pathname);
+    lines.push('https://playfits.app');
     return lines.join('\n');
   }
   async function share() {
@@ -696,7 +696,7 @@
   start('daily', today());
   if (!db.seenHelp) { db.seenHelp = true; persist(); $('#dlg-help').showModal(); }
 
-  if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
+  if ('serviceWorker' in navigator && /^https?:/.test(location.protocol) && !window.Capacitor) navigator.serviceWorker.register('sw.js').catch(() => {});
 
   window.__fits = { ruleForDay, today, fresh, byId, loadDict, start, CFG, Track, get G() { return G; } };   // for testing
 })();

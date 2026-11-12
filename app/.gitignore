@@ -1,0 +1,22 @@
+node_modules/
+www/
+# signing keys and store credentials never go in the repo
+*.jks
+*.keystore
+keystore.properties
+*.p8
+*.p12
+*.mobileprovision
+# build output
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+android/app/release/
+android/app/src/main/assets/public/
+android/capacitor-cordova-android-plugins/
+ios/App/App/public/
+ios/App/Pods/
+ios/App/App.xcworkspace/xcuserdata/
+ios/App/App.xcodeproj/xcuserdata/
+.DS_Store

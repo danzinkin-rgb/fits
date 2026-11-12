@@ -9,7 +9,7 @@ window.FITS_CONFIG = {
   posthogHost: 'https://eu.i.posthog.com',
 
   /* Google AdSense publisher ID, for example 'ca-pub-1234567890123456'. Leave empty until AdSense has approved the site. */
-  adsenseClient: '',
+  adsenseClient: 'ca-pub-5785870881254475',
 
   /* Ad unit ID of a display ad created in AdSense (a number). Shown as a banner under the result card. */
   adsenseBannerSlot: '',

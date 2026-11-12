@@ -71,7 +71,9 @@ const jobs = [
   ['favicon-32.png', 32, 32, 32 / 512],
   ['og-image.png', 1200, 630, 380 / 184],
 ];
-for (const [name, W, H, s] of jobs) {
+if (require.main === module) for (const [name, W, H, s] of jobs) {
   fs.writeFileSync(path.join(__dirname, name), png(W, H, render(W, H, s)));
   console.log('wrote', name);
 }
+
+module.exports = { render, png };

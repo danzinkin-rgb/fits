@@ -1,0 +1,24 @@
+{
+  "name": "fits-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Android and iPhone wrapper for Fits (https://playfits.app)",
+  "scripts": {
+    "www": "node build-www.js",
+    "android:sync": "node build-www.js && cap sync android",
+    "android:open": "cap open android",
+    "ios:sync": "node build-www.js && cap sync ios",
+    "ios:open": "cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.6.8",
+    "@capacitor/core": "^7.6.8",
+    "@capacitor/ios": "^7.6.8",
+    "@capacitor/splash-screen": "^7.0.5",
+    "@capacitor/status-bar": "^7.0.6"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^7.6.8"
+  }
+}
