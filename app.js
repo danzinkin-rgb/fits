@@ -326,9 +326,75 @@
     if (rewardedOn) sc.setAttribute('data-ad-frequency-hint', '30s');
     document.head.append(sc);
   }
+  /* In the Android and iPhone apps, ads come from AdMob through the native plugin. */
+  const CAP = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform() ? window.Capacitor : null;
+  const amIds = CAP && CFG.admob ? CFG.admob[CAP.getPlatform()] : null;
+  const amTest = CFG.admobTest !== false;
+  const am = (method, opts) => CAP.nativePromise('AdMob', method, opts || {});
+  /* Resolves true once ads may be requested: SDK started, consent asked where the law needs it, and on iPhone the
+     tracking question answered either way. Any failure means no ads this session, never a blocked game. */
+  const amReady = !amIds ? Promise.resolve(false) : (async () => {
+    try {
+      await am('initialize', { initializeForTesting: amTest });
+      /* The consent message is set up in AdMob (Privacy & messaging). Until it exists the request fails: live
+         ads then stay off, and only Google's sample ads may show. */
+      let consent;
+      try {
+        consent = await am('requestConsentInfo');
+        if (!consent.canRequestAds && consent.isConsentFormAvailable) consent = await am('showConsentForm');
+      } catch (e) { if (!amTest) return false; consent = {}; }
+      if (CAP.getPlatform() === 'ios') {
+        const t = await am('trackingAuthorizationStatus');
+        if (t.status === 'notDetermined') await am('requestTrackingAuthorization');
+      }
+      return consent.canRequestAds !== false;
+    } catch (e) { return false; }
+  })();
+  let amBanner = false;
+
   const Ads = {
+    /* In the apps: the same opt-in question, then an AdMob rewarded ad. The reward is given if the ad was watched
+       to the end, and also if no ad could be loaded or shown. Closing the ad early gives nothing. */
+    appRewarded(what) {
+      return new Promise(resolve => {
+        const d = $('#dlg-ad');
+        let settled = false; const subs = [];
+        const done = ok => { if (settled) return; settled = true; subs.forEach(s => { try { s.remove(); } catch (e) { /* gone */ } }); resolve(ok); };
+        $('#ad-what').textContent = 'Watch a short ad to ' + what + '?';
+        $('#ad-no').onclick = () => { d.close(); done(false); };
+        d.oncancel = () => done(false);
+        $('#ad-yes').onclick = async () => {
+          d.close();
+          if (!(await amReady)) return done(true);
+          let earned = false, shown = false;
+          const on = (ev, fn) => subs.push(CAP.addListener('AdMob', ev, fn));
+          on('onRewardedVideoAdReward', () => { earned = true; });
+          on('onRewardedVideoAdShowed', () => { shown = true; });
+          on('onRewardedVideoAdDismissed', () => done(earned));
+          on('onRewardedVideoAdFailedToLoad', () => done(true));
+          on('onRewardedVideoAdFailedToShow', () => done(true));
+          setTimeout(() => { if (!shown) done(true); }, 12000);              // slow or no connection
+          try {
+            await am('prepareRewardVideoAd', { adId: amIds.rewarded, isTesting: amTest });
+            await am('showRewardVideoAd');
+          } catch (e) { done(true); }
+        };
+        d.showModal();
+      });
+    },
+    /* A banner at the foot of the result screen only, so it never covers the game. */
+    async appBanner(show) {
+      if (!amIds || show === amBanner) return;
+      amBanner = show;
+      try {
+        if (!show) { await am('removeBanner'); document.body.style.paddingBottom = ''; return; }
+        if (!(await amReady) || !amBanner) { amBanner = false; return; }
+        await am('showBanner', { adId: amIds.banner, adSize: 'ADAPTIVE_BANNER', position: 'BOTTOM_CENTER', margin: 0, isTesting: amTest });
+      } catch (e) { amBanner = false; }
+    },
     /* Resolves true when the player may have the reward. what: words that finish "Watch a short ad to ...". */
     rewarded(what) {
+      if (amIds) return this.appRewarded(what);
       if (!rewardedOn) return Promise.resolve(true);
       return new Promise(resolve => {
         const d = $('#dlg-ad');
@@ -353,6 +419,7 @@
       });
     },
     banner() {
+      if (amIds) { this.appBanner(true); return; }
       const box = $('#ad-banner');
       box.hidden = !(adsOn && CFG.adsenseBannerSlot);
       if (box.hidden || box.dataset.filled) return;
@@ -421,7 +488,7 @@
     $('#view-done').hidden = view !== 'done';
     if (view === 'probe') renderProbe(kind);
     if (view === 'proof') renderProof();
-    if (view === 'done') renderDone();
+    if (view === 'done') renderDone(); else Ads.appBanner(false);
   }
 
   function renderProbe(kind) {
@@ -605,7 +672,7 @@
   }
 
   function renderMenu() {
-    const gate = rewardedOn ? ' Unlocks after a short ad.' : '';
+    const gate = rewardedOn || amIds ? ' Unlocks after a short ad.' : '';
     $('#menu-practice-sub').textContent = 'A random rule with a shortlist.' + gate;
     $('#menu-expert-sub').textContent = 'No shortlist. Work the rule out cold, then prove it.' + gate;
     $('#menu-archive-sub').textContent = 'Every puzzle since No. 1.' + gate;

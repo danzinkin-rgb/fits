@@ -17,4 +17,13 @@ window.FITS_CONFIG = {
   /* Set to true only after Google has accepted the account into H5 Games Ads.
      Tidy up, practice, expert rounds and past puzzles then ask the player to watch a short ad first. */
   rewardedAds: false,
+
+  /* Ads inside the Android and iPhone apps (AdMob). The website ignores these.
+     admobTest: true shows Google's sample ads, which are safe to tap. Set it to false only for store releases:
+     tapping your own live ads can get the AdMob account suspended. */
+  admobTest: true,
+  admob: {
+    android: { banner: 'ca-app-pub-5785870881254475/5907022004', rewarded: 'ca-app-pub-5785870881254475/4913504530' },
+    ios: { banner: 'ca-app-pub-5785870881254475/1480866841', rewarded: 'ca-app-pub-5785870881254475/9782687832' },
+  },
 };
