@@ -2,7 +2,7 @@
 
 A daily puzzle. One rule on the shortlist is the secret one. Test numbers, words or pictures to find which, in six moves.
 
-Play: https://danzinkin-rgb.github.io/fits/
+Play: https://playfits.app/
 
 ## Files
 
