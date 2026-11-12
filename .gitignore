@@ -25,3 +25,4 @@ notes/
 .claude/
 # Android Studio settings
 android/.idea/
+store/out/
