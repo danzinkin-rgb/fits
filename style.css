@@ -297,3 +297,10 @@ body.touch #probe-form .btn { padding: 9px 20px; }
 .page { max-width: 640px; margin: 0 auto; padding: 24px 18px 48px; }
 .page h1 { font-size: 30px; font-weight: 900; }
 .page h2 { font-size: 19px; margin: 22px 0 6px; }
+
+/* ---------- rating ---------- */
+.rate-stars { display: flex; justify-content: center; gap: 4px; margin: 6px 0 12px; }
+.rate-stars button { border: 0; background: none; font-size: 44px; line-height: 1; padding: 2px 4px; color: var(--line); }
+.rate-stars button.on { color: var(--gold); }
+#rate-text { width: 100%; font: inherit; font-size: 16px; padding: 10px 12px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg); color: var(--ink); resize: none; }
+#rate-more .btn { width: 100%; margin-top: 8px; }

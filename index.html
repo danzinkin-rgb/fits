@@ -7,11 +7,18 @@
 <meta name="description" content="A daily puzzle. There is a secret rule. Test anything you like, work out the rule, then prove it.">
 <meta name="theme-color" content="#f6f1e7">
 <meta property="og:title" content="Fits — crack the secret rule">
-<meta property="og:description" content="One secret rule a day. Test, deduce, prove.">
+<meta property="og:description" content="One secret rule a day. Six moves to find it.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://danzinkin-rgb.github.io/fits/">
+<meta property="og:image" content="https://danzinkin-rgb.github.io/fits/icons/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icon.svg">
-<link rel="stylesheet" href="style.css?v=10">
+<link rel="icon" href="icons/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Fits">
+<link rel="stylesheet" href="style.css?v=11">
 </head>
 <body>
 <div class="app">
@@ -95,7 +102,7 @@
         <p class="coach" id="done-coach"></p>
         <div class="actions">
           <button class="btn btn-go" id="btn-share">Share result</button>
-          <button class="btn btn-ghost" id="btn-feedback" hidden>Feedback</button>
+          <button class="btn btn-ghost" id="btn-feedback" hidden>Rate Fits</button>
         </div>
         <p class="next" id="done-next"></p>
         <div class="more">
@@ -143,7 +150,7 @@
   <button class="menu-item" id="menu-expert"><b>Expert round</b><span id="menu-expert-sub"></span></button>
   <button class="menu-item" id="menu-archive"><b>Past puzzles</b><span id="menu-archive-sub"></span></button>
   <button class="menu-item" id="menu-labels"><b id="menu-labels-title">Colour letters: off</b><span>Adds R, B, G or Y to every picture, for anyone who finds the colours hard to tell apart</span></button>
-  <button class="menu-item" id="menu-feedback" hidden><b>Send feedback</b><span>Tell us what works and what does not</span></button>
+  <button class="menu-item" id="menu-feedback" hidden><b>Rate Fits</b><span>Tell us what works and what does not</span></button>
   <button class="menu-item plus-item" id="menu-plus"><b>Fits Plus: coming soon</b><span>Levels, no ads, extra stats</span></button>
   <p class="small center"><a href="privacy.html">Privacy</a></p>
   <button class="btn btn-ghost" data-close>Close</button>
@@ -174,11 +181,24 @@
   <button class="btn btn-ghost" id="ad-no">No thanks</button>
 </dialog>
 
+<dialog id="dlg-rate">
+  <h2>Enjoying Fits?</h2>
+  <p class="small">Tap a star to rate it.</p>
+  <div class="rate-stars" id="rate-stars" role="group" aria-label="Rating">
+    <button aria-label="1 star">★</button><button aria-label="2 stars">★</button><button aria-label="3 stars">★</button><button aria-label="4 stars">★</button><button aria-label="5 stars">★</button>
+  </div>
+  <div id="rate-more" hidden>
+    <textarea id="rate-text" maxlength="500" rows="3" placeholder="Anything we should change? (optional)"></textarea>
+    <button class="btn btn-go" id="rate-send">Send</button>
+  </div>
+  <button class="btn btn-ghost" id="rate-later">Not now</button>
+</dialog>
+
 <div class="toast" id="toast" role="status"></div>
 <div class="confetti" id="confetti" aria-hidden="true"></div>
 
-<script src="config.js?v=10"></script>
-<script src="rules.js?v=10"></script>
-<script src="app.js?v=10"></script>
+<script src="config.js?v=11"></script>
+<script src="rules.js?v=11"></script>
+<script src="app.js?v=11"></script>
 </body>
 </html>

@@ -141,6 +141,7 @@
       s = db.days[day] || (db.days[day] = fresh(rule, 'd' + day, false));
     }
     G = { mode, day, rule, s, proof: null, picking: false, sel: null };
+    if (!s.t0) { s.t0 = Date.now(); Track.send('puzzle_start', gp()); }
     if (rule.type === 'word') loadDict();
     if (s.tray) fillTray(rule, s);
     $('#probe-input').value = '';
@@ -188,6 +189,7 @@
     const fit = !!G.rule.test(v);
     s.items.push({ v, fit, src: 'probe' });
     s.log += fit ? 'f' : 'n';
+    Track.send('test', Object.assign(gp(), { move: s.expert ? probeCount() : moves(), fit }));
     if (s.tray) { s.tray = s.tray.filter(t => t !== v); fillTray(G.rule, s); G.sel = null; }
     save();
     render();
@@ -205,6 +207,7 @@
     if (id === G.rule.id) { s.score = moves() + 1; return finish('won'); }
     s.out[id] = 'w';
     s.log += 'x';
+    Track.send('wrong_guess', Object.assign(gp(), { move: moves(), guessed: id }));
     if (moves() >= MAX_MOVES) return finish('lost');
     save();
     render();
@@ -218,6 +221,7 @@
     let n = 0;
     s.cards.forEach(id => { if (!s.out[id] && s.items.some(i => !!byId[id].test(i.v) !== i.fit)) { s.out[id] = 'x'; n++; } });
     s.log += 't';
+    Track.send('tidy_up', Object.assign(gp(), { move: moves() + 1, crossed_out: n }));
     save(); render();
     say(n ? n + (n === 1 ? ' rule' : ' rules') + ' crossed out: the board already contradicts ' + (n === 1 ? 'it.' : 'them.') : 'Nothing to cross out. Every rule left still matches the board.');
   }
@@ -228,6 +232,7 @@
     if (wrong === 0) { s.stars = starsFor(s); return finish('won'); }
     s.strikes++;
     s.log += 'x';
+    Track.send('proof_failed', Object.assign(gp(), { wrong }));
     G.proof.forEach(i => { if (!s.items.some(j => j.v === i.v)) s.items.push({ v: i.v, fit: i.fit, src: 'proof' }); });
     G.proof = null;
     if (s.strikes >= EX.STRIKES) return finish('lost');
@@ -256,6 +261,11 @@
     const s = G.s;
     s.done = result;
     G.proof = null;
+    Track.send('puzzle_end', Object.assign(gp(), {
+      result, score: result === 'won' ? (s.expert ? s.stars : s.score) : 0,
+      tests: (s.log.match(/[fn]/g) || []).length, wrong_guesses: (s.log.match(/x/g) || []).length,
+      tidied: s.log.includes('t'), seconds: Math.round((Date.now() - (s.t0 || Date.now())) / 1000),
+    }));
     if (G.mode === 'daily') {
       const st = db.stats;
       st.played++;
@@ -266,6 +276,7 @@
     save();
     render();
     if (result === 'won') confetti();
+    maybeAskRating();
   }
 
   /* ---------- ads, feedback and Plus ----------
@@ -273,7 +284,7 @@
      Banner: a standard AdSense display unit on the result screen.
      Rewarded: Google's Ad Placement API (H5 Games Ads). The player is asked first, every time, as Google's policy requires.
      If no ad is available, or the ad script is blocked, the player gets the reward anyway. */
-  const CFG = Object.assign({ adsenseClient: '', adsenseBannerSlot: '', rewardedAds: false, feedbackUrl: '', feedbackPrefill: null }, window.FITS_CONFIG || {});
+  const CFG = Object.assign({ adsenseClient: '', adsenseBannerSlot: '', rewardedAds: false, posthogKey: '', posthogHost: 'https://eu.i.posthog.com' }, window.FITS_CONFIG || {});
   const adsOn = /^ca-pub-\d+$/.test(CFG.adsenseClient);
   const rewardedOn = adsOn && CFG.rewardedAds === true;
   if (adsOn) {
@@ -324,21 +335,49 @@
     },
   };
 
-  /* Feedback opens the form in config.js. If the form's field ids are given, the puzzle number and score are filled in. */
-  function feedbackLink() {
-    if (!/^https:\/\//.test(CFG.feedbackUrl)) return '';
-    const p = CFG.feedbackPrefill, q = [];
-    if (p && G && G.day) {
-      if (p.puzzle) q.push(p.puzzle + '=' + encodeURIComponent('No. ' + G.day + ' (' + KIND[G.rule.type] + ')'));
-      if (p.score && G.s.done) q.push(p.score + '=' + encodeURIComponent(G.s.done === 'won' ? (G.s.expert ? G.s.stars + ' stars' : G.s.score + '/' + MAX_MOVES) : 'lost'));
-    }
-    return CFG.feedbackUrl + (q.length ? (CFG.feedbackUrl.includes('?') ? '&' : '?') + 'usp=pp_url&' + q.join('&') : '');
+  /* ---------- play data ----------
+     Anonymous events sent to PostHog when config.js has a project key. No account, no cookie, and no identifier
+     kept on the device: each visit gets a throwaway id held in memory only. Returning players are recognised
+     only through the counts the game already keeps (games played, streak, days since first play). */
+  const VERSION = '1.1';
+  const Track = {
+    on: /^phc_\w+$/.test(CFG.posthogKey),
+    visit: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'v' + Date.now() + Math.random().toString(36).slice(2),
+    send(event, props) {
+      if (!this.on) return;
+      const body = JSON.stringify({
+        api_key: CFG.posthogKey, event, distinct_id: this.visit, timestamp: new Date().toISOString(),
+        properties: Object.assign({
+          $process_person_profile: false, $lib: 'fits', app_version: VERSION, touch: TOUCH,
+          installed: matchMedia('(display-mode: standalone)').matches,
+          games_played: db.stats.played, streak: db.stats.streak, days_since_first_play: today() - (db.firstDay || today()),
+        }, props),
+      });
+      try { fetch(CFG.posthogHost + '/i/v0/e/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true }).catch(() => {}); } catch (e) { /* offline */ }
+    },
+  };
+  /* what every game event carries */
+  const gp = () => ({ puzzle: G.day || null, mode: G.mode, type: G.rule.type, rule: G.rule.id, difficulty: G.rule.d, shortlist: G.s.cards ? G.s.cards.length : 0 });
+
+  /* ---------- rating ----------
+     A star rating in the style of an app-store prompt. Asked after a finished daily puzzle, at most once a week,
+     and never again once the player has rated. Ratings and comments travel as play-data events. */
+  let rateStars = 0;
+  function openRating(source) {
+    rateStars = 0; drawStars();
+    $('#rate-more').hidden = true; $('#rate-text').value = '';
+    $('#dlg-rate').showModal();
+    Track.send('rating_shown', { source });
   }
-  function openFeedback() { const u = feedbackLink(); if (u) window.open(u, '_blank', 'noopener'); }
-  function openPlus() {
-    $('#plus-feedback').hidden = !feedbackLink();
-    $('#dlg-plus').showModal();
+  function drawStars() {
+    document.querySelectorAll('#rate-stars button').forEach((b, i) => { b.classList.toggle('on', i < rateStars); b.setAttribute('aria-pressed', i < rateStars); });
   }
+  function maybeAskRating() {
+    if (!Track.on || db.rated || G.mode !== 'daily') return;
+    if (db.rateAsked && today() - db.rateAsked < 7) return;
+    setTimeout(() => { if (!document.querySelector('dialog[open]')) { db.rateAsked = today(); persist(); openRating('after_game'); } }, 1800);
+  }
+  function openPlus() { $('#plus-feedback').hidden = !Track.on; $('#dlg-plus').showModal(); Track.send('plus_viewed'); }
 
   /* ---------- rendering ---------- */
   function render() {
@@ -493,7 +532,7 @@
       won && s.score <= 4 ? 'Efficient. The strongest test is one that about half the remaining rules would pass, so either answer removes half the list.' :
       'Tip: before testing, ask which rules a ✓ would remove and which a ✗ would remove. The best test removes about half either way.';
     $('#btn-share').hidden = !saved();
-    $('#btn-feedback').hidden = !feedbackLink();
+    $('#btn-feedback').hidden = !Track.on;
     Ads.banner();
     tickNext();
   }
@@ -517,6 +556,7 @@
   }
   async function share() {
     const text = shareText();
+    Track.send('share', gp());
     try {
       if (navigator.share && matchMedia('(pointer: coarse)').matches) await navigator.share({ text });
       else { await navigator.clipboard.writeText(text); toast('Result copied'); }
@@ -545,7 +585,7 @@
     $('#menu-expert-sub').textContent = 'No shortlist. Work the rule out cold, then prove it.' + gate;
     $('#menu-archive-sub').textContent = 'Every puzzle since No. 1.' + gate;
     $('#menu-labels-title').textContent = 'Colour letters: ' + (db.labels ? 'on' : 'off');
-    $('#menu-feedback').hidden = !feedbackLink();
+    $('#menu-feedback').hidden = !Track.on;
   }
 
   function renderArchive() {
@@ -596,12 +636,19 @@
   $('#btn-back').onclick = () => { G.proof = null; render(); };
   $('#btn-submit').onclick = submitProof;
   $('#btn-share').onclick = share;
-  $('#btn-help').onclick = () => $('#dlg-help').showModal();
+  $('#btn-help').onclick = () => { $('#dlg-help').showModal(); Track.send('help_opened'); };
   $('#btn-stats').onclick = () => { renderStats(); $('#dlg-stats').showModal(); };
   $('#btn-menu').onclick = () => { renderMenu(); $('#dlg-menu').showModal(); };
-  $('#btn-feedback').onclick = openFeedback;
-  $('#menu-feedback').onclick = () => { $('#dlg-menu').close(); openFeedback(); };
-  $('#plus-feedback').onclick = () => { $('#dlg-plus').close(); openFeedback(); };
+  $('#btn-feedback').onclick = () => openRating('result');
+  $('#menu-feedback').onclick = () => { $('#dlg-menu').close(); openRating('menu'); };
+  $('#plus-feedback').onclick = () => { $('#dlg-plus').close(); openRating('plus'); };
+  document.querySelectorAll('#rate-stars button').forEach((b, i) => b.onclick = () => { rateStars = i + 1; drawStars(); $('#rate-more').hidden = false; });
+  $('#rate-send').onclick = () => {
+    Track.send('rating', { stars: rateStars, comment: $('#rate-text').value.trim().slice(0, 500), puzzle: G.day || null });
+    db.rated = { stars: rateStars, day: today() }; persist();
+    $('#dlg-rate').close(); toast('Thank you for the rating');
+  };
+  $('#rate-later').onclick = () => { db.rateAsked = today(); persist(); $('#dlg-rate').close(); Track.send('rating_dismissed'); };
   $('#btn-practice').onclick = () => extra('practice');
   $('#btn-archive').onclick = () => { renderArchive(); $('#dlg-archive').showModal(); };
   $('#menu-daily').onclick = () => { $('#dlg-menu').close(); start('daily', today()); };
@@ -609,7 +656,7 @@
   $('#menu-expert').onclick = () => { $('#dlg-menu').close(); extra('expert'); };
   $('#menu-archive').onclick = () => { $('#dlg-menu').close(); renderArchive(); $('#dlg-archive').showModal(); };
   $('#menu-plus').onclick = () => { $('#dlg-menu').close(); openPlus(); };
-  $('#menu-labels').onclick = () => { db.labels = !db.labels; persist(); renderMenu(); render(); };
+  $('#menu-labels').onclick = () => { db.labels = !db.labels; persist(); renderMenu(); render(); Track.send('colour_letters', { on: db.labels }); };
   document.querySelectorAll('dialog').forEach(d => {
     d.querySelectorAll('[data-close]').forEach(b => b.onclick = () => d.close());
     if (d.id !== 'dlg-ad') d.addEventListener('click', e => { if (e.target === d) d.close(); });   // the ad prompt needs an explicit answer
@@ -620,10 +667,12 @@
     if (!document.hidden && G && G.mode === 'daily' && G.day !== today()) start('daily', today());
   });
 
+  if (!db.firstDay) { db.firstDay = today(); persist(); }
+  Track.send('app_open', { first_visit: !db.seenHelp });
   start('daily', today());
   if (!db.seenHelp) { db.seenHelp = true; persist(); $('#dlg-help').showModal(); }
 
   if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
 
-  window.__fits = { ruleForDay, today, fresh, byId, loadDict, start, CFG, get G() { return G; } };   // for testing
+  window.__fits = { ruleForDay, today, fresh, byId, loadDict, start, CFG, Track, get G() { return G; } };   // for testing
 })();

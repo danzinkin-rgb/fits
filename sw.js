@@ -1,6 +1,6 @@
 /* Network first, falling back to cache, so the game works offline and updates are picked up straight away. */
-const CACHE = 'fits-v5';
-const FILES = ['./', 'index.html', 'style.css', 'rules.js', 'app.js', 'icon.svg', 'manifest.webmanifest', 'words.txt', 'config.js', 'privacy.html'];
+const CACHE = 'fits-v6';
+const FILES = ['./', 'index.html', 'style.css', 'rules.js', 'app.js', 'icon.svg', 'manifest.webmanifest', 'words.txt', 'config.js', 'privacy.html', 'icons/icon-192.png', 'icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => {
