@@ -38,11 +38,12 @@ npm run ios:open             # opens Xcode
 2. **App Information:** category Games > Puzzle (or Word). Privacy policy URL `https://playfits.app/privacy.html`.
 3. **Pricing:** Free.
 4. **Age rating:** answer none to every content question. Do not tick unrestricted web access. Expect 4+.
-5. **App Privacy** (use the same answers as Play's Data safety):
-   - Data used to track you: **Device ID** (advertising identifier, for third-party advertising).
-   - Data linked to you: none.
-   - Data not linked to you: Coarse location (from IP), Product interaction, Other usage data, Crash/performance data, Other user content (the optional rating comment). Purposes: Analytics, Third-party advertising.
-   - Tracking: **Yes** (the app asks via Apple's tracking prompt).
+5. **App Privacy** (already filled in App Store Connect; shown here for reference):
+   - Used to track you: Coarse Location, Device ID, Product Interaction, Advertising Data.
+   - Linked to you: the same four.
+   - Not linked to you: Crash Data, Performance Data, Other Diagnostic Data, Other User Content (the optional rating comment).
+   - Purposes: third-party advertising and analytics for the ad items; analytics and app functionality for diagnostics; analytics for the comment.
+   - These follow Apple's definitions and are not confirmed against Google's AdMob guidance (Google's pages do not give label answers). They err on the side of declaring more.
 6. **Version page:** screenshots (6.9-inch and 6.5-inch iPhone are required), description from `notes/play-listing.md`, keywords, support URL `https://playfits.app`, copyright, and the review notes below.
 7. Select the uploaded build, then **Add for Review**. Sending it for review is your decision.
 
