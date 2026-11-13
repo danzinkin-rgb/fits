@@ -2,7 +2,7 @@
    Needs Playwright (borrowed from ../CityRunner2/node_modules, read only). Output: store/out/ (git-ignored). */
 const path = require('path'), fs = require('fs'), http = require('http');
 const { chromium } = require(path.join(__dirname, '..', '..', 'CityRunner2', 'node_modules', 'playwright'));
-const IOS = !!process.env.IOS;
+const IOS = !!process.env.IOS, IPAD = !!process.env.IPAD; /* IPAD=1: 13-inch iPad (2064x2752) */
 const root = path.join(__dirname, '..'), out = path.join(__dirname, 'out');
 fs.mkdirSync(out, { recursive: true });
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.svg': 'image/svg+xml', '.txt': 'text/plain', '.webmanifest': 'application/json' };
@@ -14,13 +14,13 @@ const server = http.createServer((q, r) => {
 (async () => {
   await new Promise(ok => server.listen(8123, ok));
   const b = await chromium.launch({ executablePath: process.env.CHROME || 'C:\\Users\\dzink\\AppData\\Local\\ms-playwright\\chromium-1223\\chrome-win64\\chrome.exe' });
-  const ctx = await b.newContext({ viewport: IOS ? { width: 402, height: 874 } : { width: 360, height: 640 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true });
+  const ctx = await b.newContext({ viewport: IPAD ? { width: 1032, height: 1376 } : IOS ? { width: 402, height: 874 } : { width: 360, height: 640 }, deviceScaleFactor: IPAD ? 2 : 3, isMobile: true, hasTouch: true });
   await ctx.clock.setFixedTime(new Date('2026-11-12T12:00:00')); /* the daily puzzle changes every day: keep to No. 12 (numbers) */
   const p = await ctx.newPage();
   await p.addInitScript(() => { try { localStorage.setItem('fits_seen_help', '1'); } catch (e) {} });
   await p.goto('http://localhost:8123/');
   await p.waitForTimeout(1500);
-  const shot = n => p.screenshot({ path: path.join(out, (IOS ? 'ios-' : '') + n + '.png') });
+  const shot = n => p.screenshot({ path: path.join(out, (IPAD ? 'ipad-' : IOS ? 'ios-' : '') + n + '.png') });
   const probe = async v => { for (const d of v) await p.locator('#keypad button', { hasText: new RegExp('^' + d + '$') }).first().click(); await p.click('#probe-form button[type=submit]'); await p.waitForTimeout(500); };
   await shot('phone-1-how-to-play');
   await p.click('#dlg-help [data-close]'); await p.waitForTimeout(500);
@@ -37,7 +37,7 @@ const server = http.createServer((q, r) => {
   await p.click('#btn-submit').catch(() => {}); await p.waitForTimeout(1200);
   await p.getByText('Not now', { exact: true }).click().catch(() => {}); await p.waitForTimeout(600);
   await shot('phone-7-result');
-  if (IOS) { await b.close(); server.close(); return; }
+  if (IOS || IPAD) { await b.close(); server.close(); return; }
   /* feature graphic 1024x500 */
   const fp = await (await b.newContext({ viewport: { width: 1024, height: 500 }, deviceScaleFactor: 1 })).newPage();
   const img = f => 'data:image/png;base64,' + fs.readFileSync(path.join(out, f)).toString('base64');
